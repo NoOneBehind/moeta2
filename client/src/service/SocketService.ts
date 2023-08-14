@@ -1,40 +1,52 @@
-import http from 'http';
-import { Server, ServerOptions } from 'socket.io';
+import { io } from 'socket.io-client';
 
-class SocketService {
-  private server: http.Server;
-  private io: Server;
+import { SERVER_URL } from '../const';
 
-  constructor(serverOption: Partial<ServerOptions> = { cors: { origin: '*' } }) {
-    this.server = http.createServer();
-    this.io = new Server(this.server, serverOption);
+export class SocketService {
+  public socket: ReturnType<typeof io>;
+  private timeout = 2000;
+
+  constructor() {
+    this.socket = io(SERVER_URL, { autoConnect: false });
   }
 
-  start(port = 3000) {
-    this.io.on('connection', (socket) => {
-      console.log('a user connected');
+  public connect = (): Promise<void> => {
+    return new Promise((resolve) => {
+      if (this.socket.connected) {
+        return resolve();
+      }
 
-      socket.on('message', (message) => {
-        console.log('Message from client:', message);
-      });
-
-      socket.on('disconnect', () => {
-        console.log('user disconnected');
-      });
-
-      socket.emit('message', 'Welcome to the server!');
+      this.socket.once('connect', resolve);
+      this.socket.connect();
     });
+  };
 
-    this.server.listen(port, () => {
-      console.log(`Server listening on http://localhost:${port}`);
-    });
-  }
+  public onConnect = (callback: () => void) => {
+    if (this.socket.connected) {
+      return;
+    }
 
-  stop() {
-    this.server.close(() => {
-      console.log('Server stopped');
-    });
-  }
+    this.socket.on('connect', callback);
+  };
+
+  public onDisconnect = (callback: () => void) => {
+    if (!this.socket.connected) {
+      return;
+    }
+
+    this.socket.on('disconnect', callback);
+  };
+
+  public sendMessage = async (message: string) => {
+    try {
+      await this.socket.timeout(this.timeout).emitWithAck('message', message);
+    } catch (error) {
+      console.error(error);
+      // throw error;
+    }
+  };
+
+  public setTimeout = (timeout: number) => {
+    this.timeout = timeout;
+  };
 }
-
-module.exports = SocketService;

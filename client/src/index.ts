@@ -1,22 +1,19 @@
-import { io } from 'socket.io-client';
+import { SocketService } from './service/SocketService';
 
-const PORT = 3333;
+const socketService = new SocketService();
 
-const SERVER_URL = `http://localhost:${PORT}`;
+const app = async () => {
+  socketService.onConnect(() => {
+    console.log('connected');
+  });
 
-const socket = io(SERVER_URL);
+  socketService.onDisconnect(() => {
+    console.log('disconnected');
+  });
 
-socket.on('connect', () => {
-  console.log(`ID: ${socket.id}`);
-  console.log('Connected to server:', SERVER_URL);
+  await socketService.connect();
 
-  socket.emit('message', `Hello from client ${socket.id}`);
-});
+  socketService.sendMessage('Gooood');
+};
 
-socket.on('message', (data) => {
-  console.log('Received message:', data);
-});
-
-socket.on('disconnect', () => {
-  console.log('Disconnected from server');
-});
+app().catch(console.error);
