@@ -21,7 +21,7 @@ export class SerialProtService {
     this.parser = this.port.pipe(new ReadlineParser({ delimiter: '\r\n', encoding: this.encoding }));
   }
 
-  public connect = async () => {
+  public connect = async (): Promise<void> => {
     if (this.port.isOpen) {
       console.log('Port is already open');
       return;
@@ -34,7 +34,7 @@ export class SerialProtService {
           reject(err);
         } else {
           console.log('Port opened successfully');
-          resolve(true);
+          resolve();
         }
       });
     });
