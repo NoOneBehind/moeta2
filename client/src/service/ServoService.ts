@@ -3,31 +3,40 @@ import { clamp } from 'lodash';
 
 export class ServoService {
   private gpio: Gpio;
-  private currentPulseWidth = 1500;
-  private interval = 0.1;
+
+  private maxPulse = 2300; // 162 degree
+  private minPulse = 700; // 18 degree
+
+  private interval = 0.01;
   private _isReady = false;
+
+  private middlePulse = 1500; // 90 degree
+
+  private initDuration = 1;
+  private currentPulseWidth = this.middlePulse;
 
   constructor(pinNumber: number) {
     this.gpio = new Gpio(pinNumber, { mode: Gpio.OUTPUT });
   }
 
   public initServoPosotion = async (): Promise<void> => {
-    this.gpio.servoWrite(this.currentPulseWidth);
+    this.gpio.servoWrite(this.middlePulse);
 
     return new Promise((resolve) => {
-      const iterationNum = 3 / this.interval;
-      const pulseWidthAtOnce = (this.currentPulseWidth - 500) / iterationNum;
+      const iterationNum = this.initDuration / this.interval + 1;
+      const pulseWidthAtOnce = (this.middlePulse - this.minPulse) / iterationNum;
 
       let count = 0;
       const timer = setInterval(() => {
-        if (count >= iterationNum - 1) {
+        if (count >= iterationNum) {
           resolve();
           clearInterval(timer);
         }
 
         const nextPulseWidth = this.currentPulseWidth - pulseWidthAtOnce;
-        this.gpio.servoWrite(Math.floor(nextPulseWidth));
+        this.gpio.servoWrite(Math.round(nextPulseWidth));
         count += 1;
+
         this.currentPulseWidth = nextPulseWidth;
       }, this.interval * 1000);
     });
@@ -35,31 +44,30 @@ export class ServoService {
 
   public isReady = () => this._isReady;
 
-  public moveAbsolutePosition = async (position: number, duration = 0.1) => {
+  public moveAbsolutePosition = (position: number, duration = 0.1, cb?: () => void) => {
     if (!this.isReady) {
       throw new Error('Servo is not ready');
     }
 
-    const targetPulseWidth = clamp(15 * position + 500, 500, 2000);
+    const targetPulseWidth = clamp(1600 * position + 700, this.minPulse, this.maxPulse);
     const pulseWidth = targetPulseWidth - this.currentPulseWidth;
-    const iterationNum = duration / this.interval;
+    const iterationNum = duration / this.interval + 1;
     const pulseWidthAtOnce = pulseWidth / iterationNum;
-    const restPulseWidth = pulseWidth - pulseWidthAtOnce * iterationNum;
 
     let count = 0;
     const timer = setInterval(() => {
-      console.log(this.currentPulseWidth);
-      if (count === iterationNum - 1) {
-        const nextPulseWidth = this.currentPulseWidth + restPulseWidth;
-        this.gpio.servoWrite(Math.floor(nextPulseWidth));
+      if (count >= iterationNum) {
         clearInterval(timer);
+        cb?.();
       } else {
         const nextPulseWidth = this.currentPulseWidth + pulseWidthAtOnce;
-        this.gpio.servoWrite(Math.floor(nextPulseWidth));
+        this.gpio.servoWrite(Math.round(nextPulseWidth));
 
         count += 1;
         this.currentPulseWidth = nextPulseWidth;
       }
     }, this.interval * 1000);
+
+    return timer;
   };
 }
