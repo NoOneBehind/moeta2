@@ -26,11 +26,42 @@ struct Pixel {
   uint8_t r;
   uint8_t g;
   uint8_t b;
+  uint8_t w;
   EasingType easingType;
   unsigned long startTime;
   float progress;
   State state;
 };
+
+struct PixelData {
+  int index;
+  EasingType easingType;
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+  uint8_t w;
+};
+
+String splitString(String &data, char delimiter = ' ') {
+  int pos = data.indexOf(delimiter);
+  if (pos == -1) return data;
+
+  String split = data.substring(0, pos);
+  data = data.substring(pos + 1);
+  return split;
+}
+
+PixelData parseInput(String input) {
+  PixelData data;
+  data.index = splitString(input).toInt();
+  data.easingType = static_cast<EasingType>(splitString(input).toInt());
+  data.r = splitString(input).toInt();
+  data.g = splitString(input).toInt();
+  data.b = splitString(input).toInt();
+  data.w = input.toInt();
+
+  return data;
+}
 
 EasingType getRandomEasingType() {
   int maxValue = EASE_IN_OUT_BOUNCE;
@@ -82,15 +113,15 @@ float (*getFunction(EasingType type))(float) {
       return easeInOutBounce;
 
     default:
-      return nullptr;  // 없는 함수 타입의 경우 nullptr 반환
+      return nullptr;  
   }
 }
 
 Pixel pixelArray[PIXEL_NUM] = {
-  { 255, 0, 0, EASE_OUT_QUAD, 0, IDLE },
-  { 0, 255, 0, EASE_OUT_BOUNCE, 0, IDLE },
-  { 0, 0, 255, EASE_IN_BOUNCE, 0, IDLE },
-  { 255, 0, 255, EASE_IN_OUT_BOUNCE, 0, IDLE },
+  { 255, 0, 0, 10, EASE_OUT_QUAD, 0, IDLE },
+  { 0, 255, 0, 10, EASE_OUT_BOUNCE, 0, IDLE },
+  { 0, 0, 255, 10, EASE_IN_BOUNCE, 0, IDLE },
+  { 255, 0, 255, 10, EASE_IN_OUT_BOUNCE, 0, IDLE },
 };
 
 void setup() {
@@ -105,15 +136,18 @@ void loop() {
     String input = Serial.readStringUntil('\n');
 
     if (input.length() > 0) {
-      if (input == "1") {
-        pixelArray[0].state = READY;
-      } else if (input == "2") {
-        pixelArray[1].state = READY;
-      } else if (input == "3") {
-        pixelArray[2].state = READY;
-      } else if (input == "4") {
-        pixelArray[3].state = READY;
-      }
+      PixelData pixelData = parseInput(input);
+      int index = pixelData.index;
+      Serial.println(index);
+
+      pixelArray[index].easingType = pixelData.easingType;
+
+      pixelArray[index].r = pixelData.r;
+      pixelArray[index].g = pixelData.g;
+      pixelArray[index].b = pixelData.b;
+      pixelArray[index].w = pixelData.w;
+
+      pixelArray[index].state = READY;
     }
   }
 
@@ -130,20 +164,19 @@ void loop() {
       if (elapsedTime > DURATION) {
         pixelArray[i].state = IDLE;
         strip.setPixelColor(i, 0, 0, 0, 0);
+      } else {
+        float currentProgress = (float)(elapsedTime) / DURATION;
+        float factor = getFunction(pixelArray[i].easingType)(currentProgress);
 
-        return;
+        uint8_t nextR = pixelArray[i].r * factor;
+        uint8_t nextG = pixelArray[i].g * factor;
+        uint8_t nextB = pixelArray[i].b * factor;
+        uint8_t nextW = pixelArray[i].w * factor;
+
+        strip.setPixelColor(i, nextR, nextG, nextB, nextW);
+
+        pixelArray[i].progress = currentProgress;
       }
-
-      float currentProgress = (float)(elapsedTime) / DURATION;
-      float factor = getFunction(pixelArray[i].easingType)(currentProgress);
-
-      uint8_t nextR = pixelArray[i].r * factor;
-      uint8_t nextG = pixelArray[i].g * factor;
-      uint8_t nextB = pixelArray[i].b * factor;
-
-      strip.setPixelColor(i, nextR, nextG, nextB, 100 * factor);
-
-      pixelArray[i].progress = currentProgress;
     }
   }
 
