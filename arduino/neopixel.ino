@@ -1,54 +1,103 @@
 #include <Adafruit_NeoPixel.h>
 
 #define LED_PIN 7       // Neopixel D Pin
-#define LED_COUNT 8     // Number of Neopixel LEDs
 #define BRIGHTNESS 255  // Neopixel brightness (0 ~ 255)
 
-#define FADE_INTERVAL 30
 #define DURATION 2000
 
 #define PIXEL_NUM 4
 
-Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRBW + NEO_KHZ800);
-
-int steps = DURATION / (2 * FADE_INTERVAL);
+Adafruit_NeoPixel strip(PIXEL_NUM, LED_PIN, NEO_GRBW + NEO_KHZ800);
 
 enum State {
-    IDLE,
-    READY,
-  	IN_PROGRESS
+  IDLE,
+  READY,
+  IN_PROGRESS
 };
 
 enum EasingType {
-  EASE_OUT_QUAD
+  EASE_OUT_QUAD,
+  EASE_OUT_BOUNCE,
+  EASE_IN_BOUNCE,
+  EASE_IN_OUT_BOUNCE,
 };
 
 struct Pixel {
-  	uint8_t r;
-    uint8_t g;
-    uint8_t b;
-  	EasingType easingType;
-    unsigned long startTime;
-    float progress;
-    State state;
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+  EasingType easingType;
+  unsigned long startTime;
+  float progress;
+  State state;
 };
 
-float easingFuncion(float x) {
-  return 4*x*(1-x);
+EasingType getRandomEasingType() {
+  int maxValue = EASE_IN_OUT_BOUNCE;
+  int randomValue = random(0, maxValue + 1);
+  return static_cast<EasingType>(randomValue);
+}
+
+float easeOutQuad(float x) {
+  return 4 * x * (1 - x);
+}
+
+float easeOutBounce(float x) {
+  const float n1 = 7.5625;
+  const float d1 = 2.85;
+
+  if (x < 1 / d1) {
+    return n1 * x * x;
+  } else if (x < 2 / d1) {
+    x -= 1.5 / d1;
+    return n1 * x * x + 0.75;
+  } else if (x < 2.5 / d1) {
+    x -= 2.25 / d1;
+    return n1 * x * x + 0.9375;
+  } else {
+    x -= 2.625 / d1;
+    return n1 * x * x + 0.984375;
+  }
+}
+
+float easeInBounce(float x) {
+  return 1 - easeOutBounce(1 - x);
+}
+
+float easeInOutBounce(float x) {
+  return x < 0.5
+           ? (1 - easeOutBounce(1 - 2 * x)) / 2
+           : (1 + easeOutBounce(2 * x - 1)) / 2;
+}
+
+float (*getFunction(EasingType type))(float) {
+  switch (type) {
+    case EASE_OUT_QUAD:
+      return easeOutQuad;
+    case EASE_OUT_BOUNCE:
+      return easeOutBounce;
+    case EASE_IN_BOUNCE:
+      return easeInBounce;
+    case EASE_IN_OUT_BOUNCE:
+      return easeInOutBounce;
+
+    default:
+      return nullptr;  // 없는 함수 타입의 경우 nullptr 반환
+  }
 }
 
 Pixel pixelArray[PIXEL_NUM] = {
-    {255, 0, 0, EASE_OUT_QUAD, 0, IDLE},
-    {0, 255, 0, EASE_OUT_QUAD, 0, IDLE},
-    {0, 0, 255, EASE_OUT_QUAD, 0, IDLE},
-    {255, 0, 255, EASE_OUT_QUAD, 0, IDLE},
+  { 255, 0, 0, EASE_OUT_QUAD, 0, IDLE },
+  { 0, 255, 0, EASE_OUT_BOUNCE, 0, IDLE },
+  { 0, 0, 255, EASE_IN_BOUNCE, 0, IDLE },
+  { 255, 0, 255, EASE_IN_OUT_BOUNCE, 0, IDLE },
 };
 
 void setup() {
   Serial.begin(9600);
-  strip.begin();                    
+  strip.begin();
   strip.setBrightness(BRIGHTNESS);
-  strip.show(); 
+  strip.show();
 }
 
 void loop() {
@@ -71,6 +120,8 @@ void loop() {
   for (int i = 0; i < PIXEL_NUM; ++i) {
     if (pixelArray[i].state == READY) {
       pixelArray[i].startTime = millis();
+      // pixelArray[i].easingType = getRandomEasingType();
+
       pixelArray[i].state = IN_PROGRESS;
     }
 
@@ -78,19 +129,19 @@ void loop() {
       unsigned long elapsedTime = millis() - pixelArray[i].startTime;
       if (elapsedTime > DURATION) {
         pixelArray[i].state = IDLE;
-        strip.setPixelColor(i, 0);
+        strip.setPixelColor(i, 0, 0, 0, 0);
 
         return;
-      } 
+      }
 
       float currentProgress = (float)(elapsedTime) / DURATION;
-      float factor = easingFuncion(currentProgress);
+      float factor = getFunction(pixelArray[i].easingType)(currentProgress);
 
       uint8_t nextR = pixelArray[i].r * factor;
       uint8_t nextG = pixelArray[i].g * factor;
       uint8_t nextB = pixelArray[i].b * factor;
 
-      strip.setPixelColor(i, nextR, nextG, nextB);
+      strip.setPixelColor(i, nextR, nextG, nextB, 100 * factor);
 
       pixelArray[i].progress = currentProgress;
     }
