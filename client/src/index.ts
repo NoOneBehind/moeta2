@@ -18,8 +18,8 @@ const test = (servoService: ServoService) => {
   servoService.moveAbsolutePosition(+flag, 1, () => {
     test(servoService);
     flag = !flag;
-  })
-}
+  });
+};
 
 const pixelColorMap: Record<number, [number, number, number, number]> = {
   0: [255, 0, 0, 10],
@@ -38,7 +38,9 @@ const app = async () => {
   await neoPixelService.connect();
 
   const sonic = new SonicPiService();
-  await sonic.init();
+  if (process.env.NODE_ENV === 'production') {
+    await sonic.init();
+  }
 
   await servoService.initServoPosotion();
   test(servoService);
@@ -48,10 +50,11 @@ const app = async () => {
     sonic.sendMessage(index);
   });
 
-
-    Array(8).fill(null).forEach((_, idx) => {
+  Array(8)
+    .fill(null)
+    .forEach((_, idx) => {
       neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index: idx, rgbw: pixelColorMap[idx] });
-    })
+    });
   // let idx = 0;
   // setInterval(() => {
   //   sonic.sendMessage(idx);
