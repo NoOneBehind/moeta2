@@ -33,8 +33,10 @@ export class SerialProtService {
           console.error('Error opening port:', err.message);
           reject(err);
         } else {
-          console.log('Port opened successfully');
-          resolve();
+          setTimeout(() => {
+            console.log('Port opened successfully');
+            resolve();
+          }, 2000);
         }
       });
     });

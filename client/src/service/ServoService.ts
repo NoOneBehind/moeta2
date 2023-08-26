@@ -12,7 +12,7 @@ export class ServoService {
 
   private middlePulse = 1500; // 90 degree
 
-  private initDuration = 1;
+  private initDuration = 2;
   private currentPulseWidth = this.middlePulse;
 
   constructor(pinNumber: number) {
