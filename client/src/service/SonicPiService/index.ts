@@ -1,5 +1,5 @@
 import { Client } from 'node-osc';
-import { SONIC_PI_PORT } from '../const';
+import { SONIC_PI_PORT } from '../../const';
 
 export class SonicPiService {
   private client: Client;
@@ -9,6 +9,6 @@ export class SonicPiService {
   }
 
   public sendMessage = async (message: string | number) => {
-    this.client.send('/run_code', [`${message}`], console.error);
+    this.client.send('/run_code', [`${message}`], () => {});
   };
 }
