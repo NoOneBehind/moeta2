@@ -145,7 +145,6 @@ void loop() {
 
     if (input.length() > 0) {
       PixelData pixelData = parseInput(input);
-      Serial.println("ACK");
       int index = pixelData.index;
 
 

@@ -1,3 +1,4 @@
+import { exec } from 'child_process';
 import { EasingType, NeoPixelService } from './service/NeoPixelService';
 import { ServoService } from './service/ServoService';
 import { SonicPiService } from './service/SonicPiService';
@@ -12,6 +13,13 @@ const getRandomEasingType = () => {
   const randomIndex = Math.floor(Math.random() * enumValues.length);
   return enumValues[randomIndex];
 };
+let flag = true;
+const test = (servoService: ServoService) => {
+  servoService.moveAbsolutePosition(+flag, 1, () => {
+    test(servoService);
+    flag = !flag;
+  })
+}
 
 const pixelColorMap: Record<number, [number, number, number, number]> = {
   0: [255, 0, 0, 10],
@@ -25,16 +33,25 @@ const pixelColorMap: Record<number, [number, number, number, number]> = {
 };
 
 const app = async () => {
-  const neoPixelService = new NeoPixelService({ autoOpen: false, baudRate: 9600, path: '/dev/ttyACM1' });
+  const neoPixelService = new NeoPixelService({ autoOpen: false, baudRate: 9600, path: '/dev/ttyArduino' });
+  const servoService = new ServoService(17);
   await neoPixelService.connect();
+
+  const sonic = new SonicPiService();
+  await sonic.init();
+
+  await servoService.initServoPosotion();
+  test(servoService);
 
   neoPixelService.onTouch((index) => {
     neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index, rgbw: pixelColorMap[index] });
     sonic.sendMessage(index);
   });
 
-  const sonic = new SonicPiService();
 
+    Array(8).fill(null).forEach((_, idx) => {
+      neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index: idx, rgbw: pixelColorMap[idx] });
+    })
   // let idx = 0;
   // setInterval(() => {
   //   sonic.sendMessage(idx);

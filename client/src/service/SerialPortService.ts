@@ -61,14 +61,7 @@ export class SerialProtService {
     const buffer = Buffer.isBuffer(data)
       ? Buffer.concat([data, Buffer.from(this.commandEnter, this.encoding)])
       : Buffer.from(`${data}${this.commandEnter}`, this.encoding);
-    this.port.write(buffer);
 
-    return new Promise((resolve) => {
-      this.readData().then((response) => {
-        if (response === this.ACK) {
-          resolve();
-        }
-      });
-    });
+    this.port.write(buffer);
   };
 }
