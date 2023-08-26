@@ -14,7 +14,7 @@
   },
   "scripts": {
     "dev": "sudo env \"PATH=$PATH\" nodemon",
-    "build": "tsc && node dist"
+    "build": "sudo env \"PATH=$PATH\" tsc && sudo env \"PATH=$PATH\" node dist"
   },
   "devDependencies": {
     "@types/express": "^4.17.17",

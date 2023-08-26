@@ -5,7 +5,7 @@
 
 #define DURATION 2000
 
-#define PIXEL_NUM 4
+#define PIXEL_NUM 8
 
 Adafruit_NeoPixel strip(PIXEL_NUM, LED_PIN, NEO_GRBW + NEO_KHZ800);
 
@@ -113,7 +113,7 @@ float (*getFunction(EasingType type))(float) {
       return easeInOutBounce;
 
     default:
-      return nullptr;  
+      return nullptr;
   }
 }
 
@@ -121,6 +121,10 @@ Pixel pixelArray[PIXEL_NUM] = {
   { 255, 0, 0, 10, EASE_OUT_QUAD, 0, IDLE },
   { 0, 255, 0, 10, EASE_OUT_BOUNCE, 0, IDLE },
   { 0, 0, 255, 10, EASE_IN_BOUNCE, 0, IDLE },
+  { 255, 0, 255, 10, EASE_IN_OUT_BOUNCE, 0, IDLE },
+  { 255, 0, 255, 10, EASE_IN_OUT_BOUNCE, 0, IDLE },
+  { 255, 0, 255, 10, EASE_IN_OUT_BOUNCE, 0, IDLE },
+  { 255, 0, 255, 10, EASE_IN_OUT_BOUNCE, 0, IDLE },
   { 255, 0, 255, 10, EASE_IN_OUT_BOUNCE, 0, IDLE },
 };
 
@@ -137,8 +141,9 @@ void loop() {
 
     if (input.length() > 0) {
       PixelData pixelData = parseInput(input);
+      Serial.println("ACK");
       int index = pixelData.index;
-      Serial.println(index);
+
 
       pixelArray[index].easingType = pixelData.easingType;
 

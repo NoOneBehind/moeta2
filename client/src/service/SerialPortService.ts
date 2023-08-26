@@ -1,7 +1,7 @@
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline';
 
-interface PortOption {
+export interface PortOption {
   autoOpen?: boolean;
   path: string;
   baudRate: number;
