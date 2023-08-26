@@ -1,6 +1,5 @@
 import { EasingType, NeoPixelService } from './service/NeoPixelService';
 import { ServoService } from './service/ServoService';
-import { spawn } from 'child_process';
 
 const getRandomUint8 = () => Math.round(Math.random() * 123456) % 256;
 const getRandomRgbw = () =>
@@ -18,7 +17,7 @@ const app = async () => {
   let flag = true;
 
   const test = () =>
-    servoService.moveAbsolutePosition(+!flag, 3, () => {
+    servoService.moveAbsolutePosition(+!flag, 0.5, () => {
       test();
       flag = !flag;
     });
@@ -26,29 +25,18 @@ const app = async () => {
   const neoService = new NeoPixelService({ autoOpen: false, path: '/dev/ttyACM0', baudRate: 9600 });
   await neoService.connect();
 
+  await servoService.initServoPosotion();
+  test();
+
   let index = 0;
   setInterval(() => {
-    neoService.turnOnPixel({ easingType: 0, index, rgbw: [123, 12, 200, 20] });
-    index = (index + 1) % 8;
-  }, 500);
+    neoService.turnOnPixel({ easingType: 0, index, rgbw: getRandomRgbw() });
+    index = (index + 1) % 12;
+  }, 400);
 
-  const pythonProcess = spawn('python3', ['/home/raspberrypi/works/moeta2/client/src/service/TouchService/script.py']);
-
-  pythonProcess.stdout.on('data', (data) => {
-    console.log(`Python Output: ${data.toString()}`);
-  });
-
-  pythonProcess.stderr.on('data', (data) => {
-    console.error(`Python Error: ${data.toString()}`);
-  });
-
-  pythonProcess.on('close', (code) => {
-    console.log(`Python process closed with code: ${code}`);
-  });
-
-  pythonProcess.on('exit', (code) => {
-    console.log(`Python process exited with code: ${code}`);
-  });
+  // neoService.onTouch((index) => {
+  //   neoService.turnOnPixel({ easingType: 0, index, rgbw: [255,0,0,0] });
+  // })
 };
 
 app().catch(console.error);

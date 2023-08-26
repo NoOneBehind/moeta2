@@ -1,13 +1,20 @@
 #include <Adafruit_NeoPixel.h>
 
-#define LED_PIN 7       // Neopixel D Pin
+#define LED_PIN1 7      // Neopixel D Pin
+#define LED_PIN2 8      // Neopixel D Pin
+#define LED_PIN3 9      // Neopixel D Pin
 #define BRIGHTNESS 255  // Neopixel brightness (0 ~ 255)
 
 #define DURATION 2000
 
-#define PIXEL_NUM 8
+#define PIXEL_NUM_ON_STRIP1 8
+#define PIXEL_NUM_ON_STRIP2 4
+#define PIXEL_NUM_ON_STRIP3 4
+#define TOTAL_PIXEL_NUM PIXEL_NUM_ON_STRIP1 + PIXEL_NUM_ON_STRIP2 + PIXEL_NUM_ON_STRIP3
 
-Adafruit_NeoPixel strip(PIXEL_NUM, LED_PIN, NEO_GRBW + NEO_KHZ800);
+Adafruit_NeoPixel strip1(PIXEL_NUM_ON_STRIP1, LED_PIN1, NEO_GRBW + NEO_KHZ800);
+Adafruit_NeoPixel strip2(PIXEL_NUM_ON_STRIP2, LED_PIN2, NEO_GRBW + NEO_KHZ800);
+Adafruit_NeoPixel strip3(PIXEL_NUM_ON_STRIP3, LED_PIN3, NEO_GRBW + NEO_KHZ800);
 
 enum State {
   IDLE,
@@ -117,22 +124,19 @@ float (*getFunction(EasingType type))(float) {
   }
 }
 
-Pixel pixelArray[PIXEL_NUM] = {
-  { 255, 0, 0, 10, EASE_OUT_QUAD, 0, IDLE },
-  { 0, 255, 0, 10, EASE_OUT_BOUNCE, 0, IDLE },
-  { 0, 0, 255, 10, EASE_IN_BOUNCE, 0, IDLE },
-  { 255, 0, 255, 10, EASE_IN_OUT_BOUNCE, 0, IDLE },
-  { 255, 0, 255, 10, EASE_IN_OUT_BOUNCE, 0, IDLE },
-  { 255, 0, 255, 10, EASE_IN_OUT_BOUNCE, 0, IDLE },
-  { 255, 0, 255, 10, EASE_IN_OUT_BOUNCE, 0, IDLE },
-  { 255, 0, 255, 10, EASE_IN_OUT_BOUNCE, 0, IDLE },
-};
+Pixel pixelArray[TOTAL_PIXEL_NUM];
 
 void setup() {
   Serial.begin(9600);
-  strip.begin();
-  strip.setBrightness(BRIGHTNESS);
-  strip.show();
+  strip1.begin();
+  strip1.setBrightness(BRIGHTNESS);
+  strip1.show();
+  strip2.begin();
+  strip2.setBrightness(BRIGHTNESS);
+  strip2.show();
+  strip3.begin();
+  strip3.setBrightness(BRIGHTNESS);
+  strip3.show();
 }
 
 void loop() {
@@ -156,7 +160,7 @@ void loop() {
     }
   }
 
-  for (int i = 0; i < PIXEL_NUM; ++i) {
+  for (int i = 0; i < TOTAL_PIXEL_NUM; ++i) {
     if (pixelArray[i].state == READY) {
       pixelArray[i].startTime = millis();
       // pixelArray[i].easingType = getRandomEasingType();
@@ -168,7 +172,13 @@ void loop() {
       unsigned long elapsedTime = millis() - pixelArray[i].startTime;
       if (elapsedTime > DURATION) {
         pixelArray[i].state = IDLE;
-        strip.setPixelColor(i, 0, 0, 0, 0);
+        if (i < PIXEL_NUM_ON_STRIP1) {
+          strip1.setPixelColor(i, 0, 0, 0, 0);
+        } else if (i < PIXEL_NUM_ON_STRIP1 + PIXEL_NUM_ON_STRIP2) {
+          strip2.setPixelColor(i - PIXEL_NUM_ON_STRIP1, 0, 0, 0, 0);
+        } else {
+          strip3.setPixelColor(i - PIXEL_NUM_ON_STRIP1 - PIXEL_NUM_ON_STRIP2, 0, 0, 0, 0);
+        }
       } else {
         float currentProgress = (float)(elapsedTime) / DURATION;
         float factor = getFunction(pixelArray[i].easingType)(currentProgress);
@@ -178,12 +188,20 @@ void loop() {
         uint8_t nextB = pixelArray[i].b * factor;
         uint8_t nextW = pixelArray[i].w * factor;
 
-        strip.setPixelColor(i, nextR, nextG, nextB, nextW);
+        if (i < PIXEL_NUM_ON_STRIP1) {
+          strip1.setPixelColor(i, nextR, nextG, nextB, nextW);
+        } else if (i < PIXEL_NUM_ON_STRIP1 + PIXEL_NUM_ON_STRIP2) {
+          strip2.setPixelColor(i - PIXEL_NUM_ON_STRIP1, nextR, nextG, nextB, nextW);
+        } else {
+          strip3.setPixelColor(i - PIXEL_NUM_ON_STRIP1 - PIXEL_NUM_ON_STRIP2, nextR, nextG, nextB, nextW);
+        }
 
         pixelArray[i].progress = currentProgress;
       }
     }
   }
 
-  strip.show();
+  strip1.show();
+  strip2.show();
+  strip3.show();
 }
