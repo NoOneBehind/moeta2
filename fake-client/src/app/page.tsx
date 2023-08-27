@@ -53,7 +53,7 @@ export default function Home() {
         margin: '0 auto',
       }}
     >
-      {Array(8)
+      {Array(16)
         .fill(null)
         .map((_, idx) => (
           <div

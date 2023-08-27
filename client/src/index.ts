@@ -16,7 +16,7 @@ const getRandomEasingType = () => {
 };
 let flag = true;
 const test = (servoService: ServoService) => {
-  servoService.moveAbsolutePosition(+flag, 1, () => {
+  servoService.moveAbsolutePosition(+flag, 3, () => {
     test(servoService);
     flag = !flag;
   });
@@ -24,7 +24,7 @@ const test = (servoService: ServoService) => {
 
 const pixelColorMap: Record<number, [number, number, number, number]> = {
   0: [255, 102, 102, 0],
-  1: [204, 255, 255, 0],
+  1: [153, 204, 255, 0],
   2: [204, 153, 255, 0],
   3: [204, 255, 153, 0],
   4: [204, 204, 255, 0],
@@ -45,7 +45,8 @@ const app = async () => {
     await sonic.init();
   }
 
-  await servoService.initServoPosotion();
+  // await servoService.initServoPosotion();
+  // await servoService.moveAbsolutePosition(1, 1);
   // test(servoService);
 
   neoPixelService.onTouch((index) => {
@@ -55,19 +56,22 @@ const app = async () => {
   });
 
   socketService.onMessage((index) => {
-    neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index, rgbw: pixelColorMap[index] });
+    neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index, rgbw: pixelColorMap[index % 8] });
   });
 
-  Array(8)
+  Array(16)
     .fill(null)
     .forEach((_, idx) => {
-      neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index: idx, rgbw: pixelColorMap[idx] });
+      neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index: idx, rgbw: pixelColorMap[idx % 8] });
     });
-  // let idx = 0;
-  // setInterval(() => {
-  //   sonic.sendMessage(idx);
-  //   idx = (idx + 1) % 8;
-  // }, 2000);
+
+  setInterval(() => {
+  Array(16)
+    .fill(null)
+    .forEach((_, idx) => {
+      neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index: idx, rgbw: pixelColorMap[idx % 8] });
+    });
+  }, 2000);
 };
 
 app().catch(console.error);

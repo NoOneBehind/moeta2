@@ -1,8 +1,9 @@
 #include <Adafruit_NeoPixel.h>
 
-#define LED_PIN1 7      // Neopixel D Pin
-#define LED_PIN2 8      // Neopixel D Pin
-#define LED_PIN3 9      // Neopixel D Pin
+#define LED_PIN1 7  // Neopixel D Pin
+#define LED_PIN2 8  // Neopixel D Pin
+#define LED_PIN3 9  // Neopixel D Pin
+#define LED_MAIN_PIN 10
 #define BRIGHTNESS 255  // Neopixel brightness (0 ~ 255)
 
 #define DURATION 2000
@@ -15,6 +16,7 @@
 Adafruit_NeoPixel strip1(PIXEL_NUM_ON_STRIP1, LED_PIN1, NEO_GRBW + NEO_KHZ800);
 Adafruit_NeoPixel strip2(PIXEL_NUM_ON_STRIP2, LED_PIN2, NEO_GRBW + NEO_KHZ800);
 Adafruit_NeoPixel strip3(PIXEL_NUM_ON_STRIP3, LED_PIN3, NEO_GRBW + NEO_KHZ800);
+Adafruit_NeoPixel stripMain(8, LED_MAIN_PIN, NEO_GRBW + NEO_KHZ800);
 
 enum State {
   IDLE,
@@ -137,6 +139,14 @@ void setup() {
   strip3.begin();
   strip3.setBrightness(BRIGHTNESS);
   strip3.show();
+  stripMain.begin();
+  stripMain.setBrightness(BRIGHTNESS);
+  stripMain.show();
+
+  for (int i = 0; i < 8; ++i) {
+    stripMain.setPixelColor(i, stripMain.Color(255, 255, 255, 255));
+  }
+  stripMain.show();
 }
 
 void loop() {
