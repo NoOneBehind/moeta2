@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import { EasingType, NeoPixelService } from './service/NeoPixelService';
 import { ServoService } from './service/ServoService';
 import { SonicPiService } from './service/SonicPiService';
+import { SocketService } from './service/SocketService';
 
 const getRandomUint8 = () => Math.round(Math.random() * 123456) % 256;
 const getRandomRgbw = () =>
@@ -35,6 +36,8 @@ const pixelColorMap: Record<number, [number, number, number, number]> = {
 const app = async () => {
   const neoPixelService = new NeoPixelService({ autoOpen: false, baudRate: 9600, path: '/dev/ttyArduino' });
   const servoService = new ServoService(17);
+  const socketService = new SocketService();
+  await socketService.connect();
   await neoPixelService.connect();
 
   const sonic = new SonicPiService();
@@ -43,12 +46,17 @@ const app = async () => {
   }
 
   await servoService.initServoPosotion();
-  test(servoService);
+  // test(servoService);
 
   neoPixelService.onTouch((index) => {
     neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index, rgbw: pixelColorMap[index] });
     sonic.sendMessage(index);
   });
+
+  socketService.onMessage((index) => {
+    neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index, rgbw: pixelColorMap[index] });
+  })
+
 
   Array(8)
     .fill(null)

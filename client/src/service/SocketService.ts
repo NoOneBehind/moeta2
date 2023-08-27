@@ -45,6 +45,10 @@ export class SocketService {
     }
   };
 
+  public onMessage(callback: (message: any) => void): void {
+    this.socket.on('message', callback);
+  }
+
   public setTimeout = (timeout: number) => {
     this.timeout = timeout;
   };
