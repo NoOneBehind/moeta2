@@ -51,12 +51,12 @@ const app = async () => {
   neoPixelService.onTouch((index) => {
     neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index, rgbw: pixelColorMap[index] });
     sonic.sendMessage(index);
+    socketService.sendMessage(index.toString());
   });
 
   socketService.onMessage((index) => {
     neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index, rgbw: pixelColorMap[index] });
-  })
-
+  });
 
   Array(8)
     .fill(null)

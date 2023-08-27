@@ -31,6 +31,17 @@ export default function Home() {
     return <div>loading...</div>;
   }
 
+  socket.on('message', (idx) => {
+    console.log(idx);
+    const box = document.getElementById(`flower${idx}`);
+    if (box) {
+      box.style.backgroundColor = 'red';
+      setTimeout(() => {
+        box.style.backgroundColor = 'transparent';
+      }, 2000);
+    }
+  });
+
   return (
     <div
       style={{
@@ -46,13 +57,14 @@ export default function Home() {
         .fill(null)
         .map((_, idx) => (
           <div
+            id={`flower${idx}`}
             key={+idx}
             style={{ border: 'solid 1px' }}
             onClick={() => {
               socket.timeout(timeout).emitWithAck('message', idx);
             }}
           >
-            test
+            {idx}
           </div>
         ))}
     </div>
