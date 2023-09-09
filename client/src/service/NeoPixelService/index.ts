@@ -46,6 +46,15 @@ export class NeoPixelService extends SerialProtService {
     return this.writeData(commandString);
   }
 
+  public onLeafTouch(callback: (value: number) => void): void {
+    this.onData((data: string) => {
+      const value = parseInt(data, 10);
+      if (value !== 0) {
+        callback(value);
+      }
+    });
+  }
+
   public onTouch(callback: (index: number) => void): void {
     this.touchCallback = callback;
   }

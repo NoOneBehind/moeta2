@@ -42,6 +42,10 @@ export class SerialProtService {
     });
   };
 
+  public onData = (callback: (data: string) => void): void => {
+    this.parser.on('data', callback);
+  };
+
   public readData = () =>
     new Promise((resolve) => {
       this.parser.once('data', (data) =>

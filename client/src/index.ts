@@ -63,6 +63,10 @@ const app = async () => {
     socketService.sendMessage(index.toString());
   });
 
+  neoPixelService.onLeafTouch((value) => {
+    console.log(value);
+  });
+
   socketService.onMessage((index) => {
     neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index, rgbw: pixelColorMap[index % 8] });
     if (index < 8) {
