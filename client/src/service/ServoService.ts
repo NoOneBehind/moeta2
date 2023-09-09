@@ -44,7 +44,7 @@ export class ServoService {
 
   public isReady = () => this._isReady;
 
-  public moveAbsolutePosition = (position: number, duration = 0.1, cb?: () => void) => {
+  public moveAbsolutePosition = (position: number, duration = 0.05, cb?: () => void) => {
     if (!this.isReady) {
       throw new Error('Servo is not ready');
     }

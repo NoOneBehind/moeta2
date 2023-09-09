@@ -22,6 +22,13 @@ const test = (servoService: ServoService) => {
   });
 };
 
+const sleep = async (time: number): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, time);
+  });
+
 const pixelColorMap: Record<number, [number, number, number, number]> = {
   0: [255, 102, 102, 0],
   1: [153, 204, 255, 0],
@@ -45,7 +52,8 @@ const app = async () => {
     await sonic.init();
   }
 
-  // await servoService.initServoPosotion();
+  await servoService.initServoPosotion();
+  await sleep(2000);
   // await servoService.moveAbsolutePosition(1, 1);
   // test(servoService);
 
@@ -57,6 +65,9 @@ const app = async () => {
 
   socketService.onMessage((index) => {
     neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index, rgbw: pixelColorMap[index % 8] });
+    if (index < 8) {
+      sonic.sendMessage(index);
+    }
   });
 
   Array(16)
@@ -65,13 +76,20 @@ const app = async () => {
       neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index: idx, rgbw: pixelColorMap[idx % 8] });
     });
 
-  setInterval(() => {
-  Array(16)
-    .fill(null)
-    .forEach((_, idx) => {
-      neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index: idx, rgbw: pixelColorMap[idx % 8] });
-    });
-  }, 2000);
+  await sleep(3000);
+
+  servoService.moveAbsolutePosition(1, 5, async () => {
+    await sleep(1000);
+    servoService.moveAbsolutePosition(0, 3);
+  });
+
+  // setInterval(() => {
+  // Array(16)
+  //   .fill(null)
+  //   .forEach((_, idx) => {
+  //     neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index: idx, rgbw: pixelColorMap[idx % 8] });
+  //   });
+  // }, 2000);
 };
 
 app().catch(console.error);
