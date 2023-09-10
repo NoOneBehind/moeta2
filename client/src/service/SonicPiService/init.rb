@@ -1,17 +1,32 @@
+def play_sample_from_key(num, sample_path, options = {})
+  kill_instance_variable_if_defined(:@current_sample)
+  
+  sample sample_path, options.merge(slice: 8 - num, num_slices: 8)
+end
+
+def kill_instance_variable_if_defined(variable)
+  instance_variable = instance_variable_get(variable)
+  kill instance_variable if instance_variable
+end
+
+def key_to_sample_path(key)
+  {
+    'a' => "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/2.wav",
+    's' => "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/3.wav",
+    'd' => "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/4.wav",
+    'f' => "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/5.wav",
+    'g' => "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/6.wav"
+  }[key]
+end
+
 live_loop :base do
   use_real_time
   
   key, = sync "/osc*/run_code"
   num = key.to_i
   
-  
-  # 1부터 8까지의 숫자만 처리
-  if num >= 1 && num <= 8
-    # 현재 재생 중인 샘플을 중단
-    kill @current_sample if @current_sample
-    
-    # 음원을 8등분하여 해당 부분만 재생
-    @current_sample = sample "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/1.wav", slice: 8 - num, num_slices: 8
+  if (1..8).include?(num)
+    @current_sample = play_sample_from_key(num, "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/1.wav")
   end
 end
 
@@ -20,17 +35,10 @@ live_loop :melody do
   
   key, = sync "/osc*/run_code"
   
-  
-  if key == 'a' || key == 's' || key == 'd'
-    # 현재 재생 중인 샘플을 중단
-    kill @current_sample2 if @current_sample2
-  end
-  
-  if key == "a"
-    @current_sample2 = sample "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/2.wav"
-  elsif key == "s"
-    @current_sample2 = sample "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/3.wav"
-  elsif key == "d"
-    @current_sample2 = sample "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/4.wav"
+  if ['a', 's', 'd', 'f', 'g'].include?(key)
+    kill_instance_variable_if_defined(:@current_sample2)
+    
+    sample_path = key_to_sample_path(key)
+    @current_sample2 = sample sample_path if sample_path
   end
 end

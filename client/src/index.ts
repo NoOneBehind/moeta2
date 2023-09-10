@@ -54,12 +54,14 @@ const app = async () => {
   });
 
   let prevPart = 0;
+  let lastPlayTime = 0;
   neoPixelService.onLeafTouch((value) => {
-    if (!isNumber(value) || isNaN(value)) {
+    const now = Date.now();
+    if (!isNumber(value) || isNaN(value) || now - lastPlayTime < 500) {
       return;
     }
 
-    const maxValue = 1023;
+    const maxValue = 1000;
     const partsNum = 8;
     const partValue = maxValue / partsNum;
     const currentPart = clamp(Math.floor(value / partValue) + 1, 1, 8);
@@ -67,6 +69,7 @@ const app = async () => {
     if (prevPart !== currentPart) {
       prevPart = currentPart;
       sonic.sendMessage(currentPart);
+      lastPlayTime = Date.now();
       console.log('currentPart', currentPart);
     }
   });
@@ -91,13 +94,16 @@ const app = async () => {
     servoService.moveAbsolutePosition(0, 3);
   });
 
-  // setInterval(() => {
-  // Array(16)
-  //   .fill(null)
-  //   .forEach((_, idx) => {
-  //     neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index: idx, rgbw: pixelColorMap[idx % 8] });
-  //   });
-  // }, 2000);
+  setInterval(() => {
+    let idx = 0;
+    const timer = setInterval(() => {
+      neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index: idx, rgbw: pixelColorMap[idx % 8] });
+      idx += 1;
+      if (idx >= 16) {
+        clearInterval(timer);
+      }
+    }, 200);
+  }, 2000);
 };
 
 app().catch(console.error);

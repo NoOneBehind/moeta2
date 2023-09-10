@@ -129,7 +129,7 @@ float (*getFunction(EasingType type))(float) {
 Pixel pixelArray[TOTAL_PIXEL_NUM];
 
 const int SoftPotPin = A0;    // SoftPot 연결 핀
-const int NUM_READINGS = 10;  // 이동 평균 필터의 크기
+const int NUM_READINGS = 1;  // 이동 평균 필터의 크기
 int readings[NUM_READINGS];   // 읽은 값들을 저장하는 배열
 int readIndex = 0;            // 다음에 읽을 배열의 위치
 int total = 0;                // 읽은 값들의 합계
@@ -176,8 +176,9 @@ void setup() {
 
 void loop() {
   updateSoftPotValue();  // SoftPot의 값을 업데이트
-
-  Serial.println(average);
+  if (average > 10) {
+    Serial.println(average);
+  }
 
   if (Serial.available() > 0) {
     String input = Serial.readStringUntil('\n');
