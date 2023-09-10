@@ -3,17 +3,8 @@ import { EasingType, NeoPixelService } from './service/NeoPixelService';
 import { ServoService } from './service/ServoService';
 import { SonicPiService } from './service/SonicPiService';
 import { SocketService } from './service/SocketService';
+import { clamp, isNaN, isNumber } from 'lodash';
 
-const getRandomUint8 = () => Math.round(Math.random() * 123456) % 256;
-const getRandomRgbw = () =>
-  Array(4)
-    .fill(null)
-    .map(() => getRandomUint8()) as [number, number, number, number];
-const getRandomEasingType = () => {
-  const enumValues = Object.values(EasingType).filter((value) => typeof value === 'number') as EasingType[];
-  const randomIndex = Math.floor(Math.random() * enumValues.length);
-  return enumValues[randomIndex];
-};
 let flag = true;
 const test = (servoService: ServoService) => {
   servoService.moveAbsolutePosition(+flag, 3, () => {
@@ -53,7 +44,6 @@ const app = async () => {
   }
 
   await servoService.initServoPosotion();
-  await sleep(2000);
   // await servoService.moveAbsolutePosition(1, 1);
   // test(servoService);
 
@@ -63,8 +53,22 @@ const app = async () => {
     socketService.sendMessage(index.toString());
   });
 
+  let prevPart = 0;
   neoPixelService.onLeafTouch((value) => {
-    console.log(value);
+    if (!isNumber(value) || isNaN(value)) {
+      return;
+    }
+
+    const maxValue = 1023;
+    const partsNum = 8;
+    const partValue = maxValue / partsNum;
+    const currentPart = clamp(Math.floor(value / partValue) + 1, 1, 8);
+
+    if (prevPart !== currentPart) {
+      prevPart = currentPart;
+      sonic.sendMessage(currentPart);
+      console.log('currentPart', currentPart);
+    }
   });
 
   socketService.onMessage((index) => {
