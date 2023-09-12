@@ -4,8 +4,8 @@ import busio
 import sys
 import adafruit_mpr121
 
-def initialize_mpr121(i2c, threshold=40):
-    """Initialize MPR121 with given threshold for all pins."""
+def initialize_mpr121(i2c, threshold=13):
+    """Initialize MPR121 with given treshold for all pins."""
     mpr121 = adafruit_mpr121.MPR121(i2c)
     
     for i in range(12):  # there are 12 pins on MPR121

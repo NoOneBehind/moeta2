@@ -15,7 +15,9 @@ def key_to_sample_path(key)
     's' => "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/3.wav",
     'd' => "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/4.wav",
     'f' => "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/5.wav",
-    'g' => "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/6.wav"
+    'g' => "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/6.wav",
+    'h' => "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/7.wav",
+    'j' => "/home/raspberrypi/works/moeta2/client/src/service/SonicPiService/8.wav"
   }[key]
 end
 
@@ -35,7 +37,7 @@ live_loop :melody do
   
   key, = sync "/osc*/run_code"
   
-  if ['a', 's', 'd', 'f', 'g'].include?(key)
+  if ['a', 's', 'd', 'f', 'g', 'h', 'j'].include?(key)
     kill_instance_variable_if_defined(:@current_sample2)
     
     sample_path = key_to_sample_path(key)

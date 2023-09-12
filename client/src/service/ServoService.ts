@@ -2,17 +2,17 @@ import { Gpio } from 'pigpio';
 import { clamp } from 'lodash';
 
 export class ServoService {
-  private gpio: Gpio;
+  public gpio: Gpio;
 
-  private maxPulse = 2300; // 162 degree
-  private minPulse = 700; // 18 degree
+  private maxPulse = 2250; // 162 degree
+  private minPulse = 750; // 18 degree
 
-  private interval = 0.01;
+  private interval = 0.5;
   private _isReady = false;
 
   private middlePulse = 1500; // 90 degree
 
-  private initDuration = 2;
+  private initDuration = 5;
   private currentPulseWidth = this.middlePulse;
 
   constructor(pinNumber: number) {
@@ -44,7 +44,7 @@ export class ServoService {
 
   public isReady = () => this._isReady;
 
-  public moveAbsolutePosition = (position: number, duration = 0.05, cb?: () => void) => {
+  public moveAbsolutePosition = (position: number, duration = 1, cb?: () => void) => {
     if (!this.isReady) {
       throw new Error('Servo is not ready');
     }

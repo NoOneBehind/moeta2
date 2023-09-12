@@ -31,6 +31,29 @@ const pixelColorMap: Record<number, [number, number, number, number]> = {
   7: [153, 255, 204, 0],
 };
 
+const touchIndexToPixelIndexMap: Record<number, number> = {
+  0: 0,
+  1: 1,
+  5: 2,
+  3: 3,
+  6: 4,
+  2: 5,
+  8: 6,
+  7: 7,
+}
+
+
+const touchIndexToSonicMap: Record<number, string> = {
+  8: 'a',
+  7: 's',
+  6: 'd',
+  5: 'f',
+  3: 'g',
+  2: 'h',
+  1: 'j',
+  0: '0',
+}
+
 const app = async () => {
   const neoPixelService = new NeoPixelService({ autoOpen: false, baudRate: 9600, path: '/dev/ttyArduino' });
   const servoService = new ServoService(17);
@@ -48,16 +71,16 @@ const app = async () => {
   // test(servoService);
 
   neoPixelService.onTouch((index) => {
-    neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index, rgbw: pixelColorMap[index % 8] });
-    sonic.sendMessage(index);
-    socketService.sendMessage(index.toString());
+    neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index: touchIndexToPixelIndexMap[index], rgbw: pixelColorMap[index % 8] });
+    sonic.sendMessage(touchIndexToSonicMap[index]);
+    socketService.sendMessage(touchIndexToPixelIndexMap[index].toString());
   });
 
   let prevPart = 0;
   let lastPlayTime = 0;
   neoPixelService.onLeafTouch((value) => {
     const now = Date.now();
-    if (!isNumber(value) || isNaN(value) || now - lastPlayTime < 500) {
+    if (value <= 50 || !isNumber(value) || isNaN(value) || now - lastPlayTime < 500) {
       return;
     }
 
@@ -70,14 +93,16 @@ const app = async () => {
       prevPart = currentPart;
       sonic.sendMessage(currentPart);
       lastPlayTime = Date.now();
-      console.log('currentPart', currentPart);
     }
   });
 
   socketService.onMessage((index) => {
-    neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index, rgbw: pixelColorMap[index % 8] });
-    if (index < 8) {
-      sonic.sendMessage(index);
+    if (+index < 16) {
+      neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index, rgbw: pixelColorMap[index % 8] });
+    } else if (index === 'open') {
+      servoService.gpio.servoWrite(2250);
+    } else if (index === 'close') {
+      servoService.gpio.servoWrite(750);
     }
   });
 
@@ -87,23 +112,23 @@ const app = async () => {
       neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index: idx, rgbw: pixelColorMap[idx % 8] });
     });
 
-  await sleep(3000);
+  await sleep(2000);
 
-  servoService.moveAbsolutePosition(1, 5, async () => {
+  servoService.moveAbsolutePosition(1, 3, async () => {
     await sleep(1000);
     servoService.moveAbsolutePosition(0, 3);
   });
 
-  setInterval(() => {
-    let idx = 0;
-    const timer = setInterval(() => {
-      neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index: idx, rgbw: pixelColorMap[idx % 8] });
-      idx += 1;
-      if (idx >= 16) {
-        clearInterval(timer);
-      }
-    }, 200);
-  }, 2000);
+  // setInterval(() => {
+  //   let idx = 0;
+  //   const timer = setInterval(() => {
+  //     neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index: idx, rgbw: pixelColorMap[idx % 8] });
+  //     idx += 1;
+  //     if (idx >= 16) {
+  //       clearInterval(timer);
+  //     }
+  //   }, 200);
+  // }, 2000);
 };
 
 app().catch(console.error);
