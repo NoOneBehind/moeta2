@@ -48,7 +48,7 @@ const app = async () => {
   // test(servoService);
 
   neoPixelService.onTouch((index) => {
-    neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index, rgbw: pixelColorMap[index] });
+    neoPixelService.turnOnPixel({ easingType: EasingType.EASE_OUT_QUAD, index, rgbw: pixelColorMap[index % 8] });
     sonic.sendMessage(index);
     socketService.sendMessage(index.toString());
   });
